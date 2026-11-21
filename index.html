@@ -1,0 +1,178 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Vườn số 10 | toansaintmary</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: 24px 16px;
+      background: #f2f7ee;
+      color: #17352c;
+      font: 1.125rem/1.5 system-ui, sans-serif;
+    }
+    main {
+      max-width: 520px;
+      margin: 24px auto;
+      padding: clamp(16px, 5vw, 36px);
+      border-radius: 24px;
+      background: white;
+      text-align: center;
+    }
+    h1 { margin: 4px 0 12px; }
+    .khung {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 8px;
+      max-width: 340px;
+      margin: 20px auto;
+    }
+    .o {
+      display: grid;
+      place-items: center;
+      aspect-ratio: 1;
+      border: 2px solid #b9c9bf;
+      border-radius: 10px;
+    }
+    .co-cham::after {
+      content: "";
+      width: 60%;
+      aspect-ratio: 1;
+      border-radius: 50%;
+      background: #1b7545;
+    }
+    .dap-an {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    button {
+      min-height: 48px;
+      min-width: 60px;
+      padding: 8px 16px;
+      border: 0;
+      border-radius: 10px;
+      background: #165b39;
+      color: white;
+      font: inherit;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    button:focus-visible { outline: 3px solid #234ec6; outline-offset: 3px; }
+    button:disabled { background: #526159; cursor: default; }
+    #phan-hoi { min-height: 1.5em; }
+  </style>
+</head>
+<body>
+  <main>
+    <strong>toansaintmary</strong>
+    <h1>Vườn số 10</h1>
+    <p id="tien-do"></p>
+
+    <section id="luot-choi" aria-label="Câu hỏi">
+      <h2 id="cau-hoi" tabindex="-1">Còn thiếu mấy chấm để đủ 10?</h2>
+      <div id="khung" class="khung" role="img"></div>
+      <div id="dap-an" class="dap-an"></div>
+    </section>
+
+    <p id="phan-hoi" role="status"></p>
+    <button id="tiep" type="button" hidden>Câu tiếp theo</button>
+    <button id="choi-lai" type="button" hidden>Chơi lại</button>
+  </main>
+
+  <script>
+    const soChamMoiCau = [7, 4, 9, 2, 6];
+
+    const tienDo = document.querySelector("#tien-do");
+    const luotChoi = document.querySelector("#luot-choi");
+    const cauHoi = document.querySelector("#cau-hoi");
+    const khung = document.querySelector("#khung");
+    const dapAn = document.querySelector("#dap-an");
+    const phanHoi = document.querySelector("#phan-hoi");
+    const nutTiep = document.querySelector("#tiep");
+    const nutChoiLai = document.querySelector("#choi-lai");
+
+    let viTri = 0;
+    let diem = 0;
+
+    function hienCauHoi() {
+      const soCham = soChamMoiCau[viTri];
+      const dung = 10 - soCham;
+
+      tienDo.textContent = `Câu ${viTri + 1}/${soChamMoiCau.length} · Điểm ${diem}`;
+      phanHoi.textContent = "";
+      luotChoi.hidden = false;
+      nutTiep.hidden = true;
+      nutChoiLai.hidden = true;
+      khung.replaceChildren();
+      dapAn.replaceChildren();
+      khung.setAttribute("aria-label", `Khung 10 ô có ${soCham} chấm xanh`);
+
+      for (let i = 0; i < 10; i++) {
+        const o = document.createElement("span");
+        o.className = i < soCham ? "o co-cham" : "o";
+        khung.append(o);
+      }
+
+      const luaChon = new Set([dung]);
+      while (luaChon.size < 3) {
+        luaChon.add(Math.floor(Math.random() * 9) + 1);
+      }
+
+      for (const so of [...luaChon].sort((a, b) => a - b)) {
+        const nut = document.createElement("button");
+        nut.type = "button";
+        nut.textContent = so;
+
+        nut.addEventListener("click", () => {
+          const chonDung = so === dung;
+          if (chonDung) diem++;
+          const phepTinh = `${soCham} + ${dung} = 10.`;
+          phanHoi.textContent = chonDung
+            ? `Đúng rồi! ${phepTinh}`
+            : `Còn thiếu ${dung} chấm. ${phepTinh}`;
+
+          tienDo.textContent = `Câu ${viTri + 1}/${soChamMoiCau.length} · Điểm ${diem}`;
+          for (const nutDapAn of dapAn.children) nutDapAn.disabled = true;
+
+          nutTiep.textContent = viTri + 1 === soChamMoiCau.length
+            ? "Xem kết quả"
+            : "Câu tiếp theo";
+          nutTiep.hidden = false;
+          nutTiep.focus();
+        });
+
+        dapAn.append(nut);
+      }
+    }
+
+    nutTiep.addEventListener("click", () => {
+      viTri++;
+      if (viTri < soChamMoiCau.length) {
+        hienCauHoi();
+        cauHoi.focus();
+        return;
+      }
+
+      luotChoi.hidden = true;
+      nutTiep.hidden = true;
+      tienDo.textContent = "Hoàn thành";
+      phanHoi.textContent = `Em trả lời đúng ${diem}/${soChamMoiCau.length} câu.`;
+      nutChoiLai.hidden = false;
+      nutChoiLai.focus();
+    });
+
+    nutChoiLai.addEventListener("click", () => {
+      viTri = 0;
+      diem = 0;
+      hienCauHoi();
+      cauHoi.focus();
+    });
+
+    hienCauHoi();
+  </script>
+</body>
+</html>
